@@ -1,3 +1,17 @@
+## Homelite
+
+
+https://github.com/user-attachments/assets/27ace32b-3572-4f6d-b05c-07ce325b7cc6
+
+
+## Screenshots
+<img width="1366" height="768" alt="Screenshot (191)" src="https://github.com/user-attachments/assets/ef60aefb-c7f7-47f6-bcb6-182311f005d0" />
+
+
+<img width="1366" height="768" alt="Screenshot (191)" src="https://github.com/user-attachments/assets/6ebaeaa7-5217-482d-b0ae-a4467dc33a7d" />
+
+
+<img width="1366" height="768" alt="Screenshot (193)" src="https://github.com/user-attachments/assets/3cdd5487-4d50-4f41-8695-cf4791ea59ec" />
 
 
 ## Quick Start
