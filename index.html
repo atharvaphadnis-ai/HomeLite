@@ -1,0 +1,2560 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>HomeLite — Private Cloud</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+/* ============ Design tokens ============ */
+:root {
+  --bg: #0a0b0f;
+  --bg-2: #0d0f15;
+  --panel: rgba(22, 24, 30, 0.72);
+  --panel-solid: #16181e;
+  --panel-2: rgba(30, 33, 42, 0.6);
+  --panel-3: rgba(40, 44, 56, 0.5);
+  --text: #eef1f7;
+  --text-2: #b6bccb;
+  --muted: #7d8496;
+  --border: rgba(255,255,255,.08);
+  --border-2: rgba(255,255,255,.14);
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-3: #22d3ee;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --ease: cubic-bezier(.2, .9, .25, 1);
+  --ease-spring: cubic-bezier(.34, 1.3, .5, 1);
+  --dur-micro: 120ms;
+  --dur: 200ms;
+  --dur-enter: 400ms;
+  --shadow-glow: 0 0 0 1px rgba(99,102,241,.35), 0 8px 32px rgba(99,102,241,.25);
+  --elev-1: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+  --elev-2: 0 8px 32px rgba(0,0,0,.4);
+  --elev-3: 0 12px 48px rgba(0,0,0,.5);
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 32px;
+  --fs-kpi: clamp(34px, 6vw, 44px);
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-normal: 1.55;
+  --tracking-tight: -0.02em;
+  --tracking-tighter: -0.035em;
+
+  --reading: 65ch;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+}
+:root[data-theme="light"] {
+  --bg: #f6f7fb;
+  --bg-2: #eef0f5;
+  --panel: rgba(255,255,255,.86);
+  --panel-solid: #ffffff;
+  --panel-2: rgba(245,246,250,.9);
+  --panel-3: rgba(235,238,245,.85);
+  --text: #0e1220;
+  --text-2: #40485c;
+  --muted: #6b7285;
+  --border: rgba(15,20,35,.09);
+  --border-2: rgba(15,20,35,.14);
+  --accent: #4f46e5;
+  --accent-2: #7c3aed;
+  --accent-3: #0891b2;
+  --elev-1: 0 1px 2px rgba(15,20,35,.06), 0 4px 12px rgba(15,20,35,.06);
+  --elev-2: 0 8px 32px rgba(15,20,35,.12);
+  --elev-3: 0 12px 48px rgba(15,20,35,.16);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font: var(--fs-base)/var(--lh-normal) ui-sans-serif, -apple-system, "Segoe UI Variable", "Segoe UI", Inter, Roboto, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  letter-spacing: -0.005em;
+  font-feature-settings: "cv01", "ss01", "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ambient gradient orbs */
+body::before, body::after {
+  content: "";
+  position: fixed;
+  z-index: -2;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: .35;
+  pointer-events: none;
+  animation: float 22s ease-in-out infinite;
+}
+body::before {
+  width: 620px; height: 620px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  top: -220px; left: -180px;
+}
+body::after {
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, var(--accent-3) 0%, transparent 70%);
+  bottom: -180px; right: -160px;
+  animation-delay: -8s;
+}
+@keyframes float {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(40px,-30px) scale(1.08); }
+}
+
+/* Noise overlay */
+body::before { content: ""; }
+.noise {
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+  opacity: .03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+:root[data-theme="light"] .noise { opacity: .025; }
+
+a { color: var(--accent-3); text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+.hidden { display: none !important; }
+::selection { background: var(--accent); color: #fff; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); background-clip: content-box; }
+
+/* Focus ring */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.btn:focus-visible, .icon-btn:focus-visible, .chip:focus-visible, .row-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============ Auth ============ */
+.center-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.auth-card {
+  width: 100%; max-width: 440px;
+  background: var(--panel);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px 28px;
+  box-shadow: var(--elev-2);
+  animation: rise var(--dur-enter) var(--ease) both;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.brand-mark { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.logo-orb {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: conic-gradient(from 120deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  box-shadow: var(--shadow-glow); animation: rotate 8s linear infinite; position: relative;
+}
+.logo-orb::after { content: ""; position: absolute; inset: 6px; background: var(--bg); border-radius: 8px; }
+@keyframes rotate { to { transform: rotate(360deg); } }
+.brand-name { font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--tracking-tight); }
+.brand-tag { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
+.auth-card h1 { font-size: var(--fs-2xl); font-weight: 650; letter-spacing: var(--tracking-tighter); margin: 0 0 6px; }
+.auth-card .sub { color: var(--text-2); font-size: var(--fs-md); margin: 0 0 24px; max-width: var(--reading); }
+.field { margin-bottom: 14px; }
+.field label { display: block; margin-bottom: 6px; color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
+.field input, .field select {
+  width: 100%; padding: 11px 13px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  outline: none; font-size: var(--fs-base);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.field input:hover, .field select:hover { border-color: var(--border-2); }
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+  background: var(--panel-solid);
+}
+
+/* ============ Buttons ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+  font-weight: 500; font-size: var(--fs-md); white-space: nowrap;
+  transition: transform var(--dur-micro) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.btn:hover { background: var(--panel-solid); border-color: var(--border-2); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent; color: #fff;
+  box-shadow: 0 4px 14px rgba(99,102,241,.35);
+}
+.btn.primary:hover { box-shadow: 0 6px 20px rgba(99,102,241,.5); filter: brightness(1.06); }
+.btn.danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff; border-color: transparent; }
+.btn.danger:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover { background: var(--panel-2); border-color: var(--border); }
+.btn-full { width: 100%; }
+.error { color: var(--danger); font-size: var(--fs-base); min-height: 18px; margin-top: 8px; }
+
+/* ============ App header ============ */
+.app-header {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 22px;
+  background: var(--panel);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid var(--border);
+}
+.app-header .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: var(--fs-lg); letter-spacing: var(--tracking-tight); }
+.app-header .brand .logo-orb { width: 28px; height: 28px; border-radius: 8px; }
+.app-header .brand .logo-orb::after { inset: 4px; border-radius: 5px; }
+.status-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text-2); font-size: var(--fs-sm);
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--success);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.2); animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+  50%     { box-shadow: 0 0 0 6px rgba(16,185,129,.05); }
+}
+.spacer { flex: 1; }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  background: transparent; border: 1px solid transparent; color: var(--text-2);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.icon-btn:hover { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+.icon-btn:active { transform: translateY(1px); }
+.icon-btn svg { width: 18px; height: 18px; }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; display: grid; place-items: center;
+  font-weight: 600; font-size: var(--fs-base);
+  box-shadow: 0 2px 8px rgba(99,102,241,.35);
+  flex-shrink: 0;
+}
+
+/* ============ Shell + hero ============ */
+main.shell { max-width: 1180px; margin: 0 auto; padding: 22px; animation: fade-up var(--dur-enter) var(--ease) both; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.hero {
+  position: relative; overflow: hidden; border-radius: var(--radius-lg);
+  padding: 28px 28px 26px; margin-bottom: 22px;
+  background: var(--panel); border: 1px solid var(--border-2); box-shadow: var(--elev-1);
+}
+.hero::before {
+  content: "";
+  position: absolute; inset: -50% -20% auto -20%; height: 180%;
+  background: conic-gradient(from 180deg at 50% 50%,
+    rgba(99,102,241,.18), rgba(139,92,246,.14), rgba(34,211,238,.14), rgba(99,102,241,.18));
+  filter: blur(40px); animation: spin 26s linear infinite; pointer-events: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.hero-inner { position: relative; z-index: 1; }
+.hero h1 { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: var(--tracking-tight); margin: 0 0 4px; }
+.hero .greet { color: var(--text-2); font-size: var(--fs-base); max-width: var(--reading); margin: 0; }
+
+/* Primary KPI */
+.kpi {
+  position: relative;
+  margin-top: 22px; padding: 22px 24px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(139,92,246,.05) 60%, rgba(34,211,238,.08));
+  border: 1px solid var(--border-2);
+  overflow: hidden;
+  transition: border-color var(--dur) var(--ease);
+}
+.kpi::before {
+  content: "";
+  position: absolute; right: -40px; top: -40px; width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(99,102,241,.35) 0%, transparent 70%);
+  filter: blur(20px); pointer-events: none;
+}
+.kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.kpi-label {
+  font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); font-weight: 600;
+}
+.kpi-pct {
+  font-size: var(--fs-sm); font-weight: 600;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  color: var(--accent-2);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.kpi-row { display: flex; align-items: baseline; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.kpi-value {
+  font-size: var(--fs-kpi); font-weight: 700;
+  letter-spacing: var(--tracking-tighter); line-height: 1;
+  background: linear-gradient(135deg, var(--text), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.kpi-sub { font-size: var(--fs-lg); color: var(--text-2); font-weight: 500; letter-spacing: var(--tracking-tight); }
+.kpi-hint { font-size: var(--fs-sm); color: var(--warning); font-weight: 500; margin-left: auto; }
+.kpi-bar {
+  height: 10px; background: rgba(0,0,0,.18);
+  border: 1px solid var(--border); border-radius: 999px;
+  overflow: hidden; margin-top: 16px; position: relative;
+}
+:root[data-theme="light"] .kpi-bar { background: rgba(15,20,35,.06); }
+.kpi-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  border-radius: 999px; transition: width .8s var(--ease);
+  position: relative; overflow: hidden;
+}
+.kpi-fill::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  animation: shimmer 2.4s infinite;
+}
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.kpi.warning { border-color: rgba(245,158,11,.4); }
+.kpi.warning .kpi-fill { background: linear-gradient(90deg, var(--warning), var(--danger)); }
+.kpi.warning .kpi-pct { color: var(--warning); background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.4); }
+
+/* Recent folders */
+.recent-folders { margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rf-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.rf-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.rf-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text-2); font-size: var(--fs-sm);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-micro) var(--ease);
+}
+.rf-chip:hover { color: var(--text); border-color: var(--border-2); transform: translateY(-1px); }
+.rf-chip svg { width: 14px; height: 14px; opacity: .7; }
+
+/* Secondary stats */
+.hero-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.stat { padding: 14px 16px; border-radius: var(--radius-md); background: var(--panel-2); border: 1px solid var(--border); transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.stat:hover { border-color: var(--border-2); transform: translateY(-1px); }
+.stat .label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 6px; }
+.stat .value { font-size: var(--fs-xl); font-weight: 650; letter-spacing: var(--tracking-tight); }
+.stat .hint { font-size: var(--fs-sm); color: var(--text-2); margin-top: 4px; }
+
+/* ============ Toolbar ============ */
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.toolbar .left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.toolbar .right { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.btn svg, .btn span { flex-shrink: 0; }
+
+.search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+.search-wrap svg.s-ic {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--muted); pointer-events: none;
+}
+.search-wrap input {
+  width: 100%; padding: 10px 36px 10px 36px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  outline: none; transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  font-size: var(--fs-base);
+}
+.search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+.search-kbd {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 20px; padding: 0 6px;
+  border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--muted); pointer-events: none;
+  font-size: var(--fs-sm); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.seg {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.seg button {
+  width: 30px; height: 28px; border-radius: 6px;
+  display: grid; place-items: center;
+  color: var(--muted); transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] {
+  background: var(--panel-solid); color: var(--accent-2);
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.seg button svg { width: 16px; height: 16px; }
+
+.kbd-btn {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  background: transparent; border: 1px solid transparent; color: var(--text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-base); font-weight: 600;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.kbd-btn:hover { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+.kbd-btn:active { transform: translateY(1px); }
+
+.kbd {
+  display: inline-block; padding: 1px 7px; border-radius: 6px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  font-size: var(--fs-sm); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ============ Filter chips ============ */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 0 14px; }
+.chip {
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--panel); border: 1px solid var(--border);
+  color: var(--text-2); font-size: var(--fs-base); font-weight: 500;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-micro) var(--ease);
+}
+.chip:hover { color: var(--text); border-color: var(--border-2); transform: translateY(-1px); }
+.chip:active { transform: translateY(0); }
+.chip.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; border-color: transparent;
+  box-shadow: 0 2px 8px rgba(99,102,241,.3);
+}
+.chip .count {
+  font-variant-numeric: tabular-nums; opacity: .7;
+  font-size: var(--fs-sm);
+  padding: 1px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.1);
+}
+.chip.active .count { background: rgba(255,255,255,.22); opacity: 1; }
+
+/* ============ Breadcrumbs ============ */
+.crumbs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 8px 4px 14px; color: var(--muted); font-size: var(--fs-base); min-height: 30px; }
+.crumbs button { padding: 4px 8px; border-radius: 6px; color: var(--text-2); transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.crumbs button:hover { background: var(--panel-2); color: var(--text); }
+.crumbs .sep { opacity: .4; margin: 0 2px; }
+
+/* ============ Files card ============ */
+.files-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--elev-1);
+  position: relative;
+}
+.files-head {
+  display: grid; grid-template-columns: 36px 1fr 110px 160px 170px;
+  gap: 8px; padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm); color: var(--muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.files-head > div { cursor: pointer; user-select: none; transition: color var(--dur) var(--ease); }
+.files-head > div:hover { color: var(--text); }
+.files-head > div[data-no-sort] { cursor: default; }
+.files-head > div[data-no-sort]:hover { color: var(--muted); }
+.files-head .sorted { color: var(--accent-2); }
+.files-head .sort-arrow { font-size: 10px; opacity: .7; margin-left: 4px; }
+
+.file-row {
+  position: relative;
+  display: grid; grid-template-columns: 36px 1fr 110px 160px 170px;
+  gap: 8px; padding: 12px 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--dur-micro) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  animation: row-in var(--dur-enter) var(--ease) both;
+  --hue: 220;
+}
+@keyframes row-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.file-row::before {
+  content: "";
+  position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, hsla(var(--hue), 85%, 65%, 1), hsla(var(--hue), 70%, 50%, 1));
+  transform: scaleY(0); transform-origin: center;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  opacity: 0;
+}
+.file-row:hover {
+  background: var(--panel-2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px hsla(var(--hue), 70%, 50%, .10), inset 0 1px 0 hsla(var(--hue), 70%, 60%, .18);
+}
+.file-row:hover::before { transform: scaleY(1); opacity: 1; }
+.file-row.selected { background: hsla(var(--hue), 70%, 50%, .06); }
+.file-row.selected::before { transform: scaleY(1); opacity: .7; }
+.file-row:last-child { border-bottom: none; }
+
+.row-checkbox {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.file-row:hover .row-checkbox,
+.file-row.selected .row-checkbox,
+.files-card.view-grid .row-checkbox { opacity: 1; }
+.row-checkbox input {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
+
+.file-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.file-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, hsla(var(--hue), 70%, 60%, .15), hsla(var(--hue), 70%, 50%, .05));
+  border: 1px solid hsla(var(--hue), 70%, 50%, .25);
+  flex-shrink: 0;
+  font-size: var(--fs-lg);
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.file-row:hover .file-icon { transform: scale(1.05); border-color: hsla(var(--hue), 70%, 50%, .45); }
+.file-name a { font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-name a:hover { color: var(--accent-3); }
+.file-meta { color: var(--text-2); font-size: var(--fs-base); }
+.file-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.row-btn {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  color: var(--muted); background: transparent; border: 1px solid transparent;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-micro) var(--ease);
+}
+.row-btn:hover { color: var(--text); background: var(--panel-solid); border-color: var(--border); transform: translateY(-1px); }
+.row-btn.danger:hover { color: var(--danger); border-color: rgba(239,68,68,.4); }
+.row-btn svg { width: 14px; height: 14px; }
+
+/* ---- Grid view ---- */
+.files-card.view-grid .files-head { display: none; }
+.files-card.view-grid #filesBody {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; padding: 14px;
+}
+.files-card.view-grid .file-row {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  text-align: center; align-items: center;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.files-card.view-grid .file-row::before { top: 0; bottom: auto; left: 0; right: 0; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: linear-gradient(90deg, hsla(var(--hue), 85%, 65%, 1), hsla(var(--hue), 70%, 50%, 1)); transform: scaleX(0); }
+.files-card.view-grid .file-row:hover::before { transform: scaleX(1); opacity: 1; }
+.files-card.view-grid .file-row:hover { box-shadow: 0 8px 22px hsla(var(--hue), 70%, 50%, .15); }
+.files-card.view-grid .row-checkbox { position: absolute; top: 8px; right: 8px; opacity: 1; }
+.files-card.view-grid .file-icon { width: 56px; height: 56px; font-size: 28px; border-radius: var(--radius); }
+.files-card.view-grid .file-row:hover .file-icon { transform: scale(1.08); }
+.files-card.view-grid .file-name { display: block; text-align: center; overflow: visible; }
+.files-card.view-grid .file-name a { white-space: normal; word-break: break-word; display: block; }
+.files-card.view-grid .file-meta { font-size: var(--fs-sm); text-align: center; }
+.files-card.view-grid .file-meta + .file-meta { margin-top: -4px; }
+.files-card.view-grid .file-actions { justify-content: center; }
+
+/* ============ Empty state ============ */
+.empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+.empty .illus { width: 120px; height: 96px; margin: 0 auto 16px; display: block; }
+.empty .illus-cloud { fill: none; stroke: var(--border-2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.empty .illus-folder { fill: rgba(99,102,241,.10); stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+.empty .illus-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.empty .illus-arrow-anim { animation: bob 1.8s var(--ease) infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.empty .title { color: var(--text); font-size: var(--fs-lg); font-weight: 600; margin-bottom: 4px; }
+.empty .hint { font-size: var(--fs-base); max-width: 320px; margin: 0 auto 14px; }
+.empty .dz-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* ============ Status bar ============ */
+.statusbar {
+  margin-top: 18px; padding: 12px 18px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex; flex-wrap: wrap; gap: 14px;
+  align-items: center; font-size: var(--fs-sm); color: var(--text-2);
+}
+.statusbar .group { display: inline-flex; align-items: center; gap: 6px; }
+.statusbar .group .lbl { color: var(--muted); text-transform: uppercase; font-size: var(--fs-xs); letter-spacing: .08em; }
+.statusbar .group .val { color: var(--text); font-weight: 500; }
+.statusbar .sep { width: 1px; height: 14px; background: var(--border); }
+.statusbar .spacer { flex: 1; }
+.statusbar .ver { color: var(--muted); font-size: var(--fs-xs); }
+
+/* ============ Upload tray ============ */
+.upload-tray {
+  position: fixed; right: 18px; bottom: 18px; z-index: 55;
+  width: 360px; max-width: calc(100vw - 36px);
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-3);
+  overflow: hidden;
+  animation: tray-in var(--dur-enter) var(--ease) both;
+}
+@keyframes tray-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.tray-head { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.tray-title { font-size: var(--fs-sm); font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: .08em; }
+.tray-clear { margin-left: auto; font-size: var(--fs-sm); color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.tray-clear:hover { color: var(--text); background: var(--panel-2); }
+.tray-list { max-height: 320px; overflow-y: auto; }
+.upload-item {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center;
+  transition: opacity var(--dur) var(--ease);
+}
+.upload-item:last-child { border-bottom: none; }
+.upload-item.done { opacity: .55; }
+.upload-item.done .ui-fill { background: linear-gradient(90deg, var(--success), #34d399); }
+.upload-item.error .ui-name { color: var(--danger); }
+.ui-icon { font-size: var(--fs-lg); text-align: center; }
+.ui-info { min-width: 0; }
+.ui-name { font-size: var(--fs-base); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-stats { display: flex; gap: 10px; margin-top: 4px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.ui-bar { height: 4px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin-top: 4px; }
+.ui-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width var(--dur-micro) var(--ease); border-radius: 999px; }
+.ui-cancel { width: 24px; height: 24px; border-radius: 6px; color: var(--muted); display: grid; place-items: center; }
+.ui-cancel:hover { color: var(--danger); background: var(--panel-2); }
+.ui-cancel svg { width: 12px; height: 12px; }
+
+/* ============ Batch bar ============ */
+.batch-bar {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  z-index: 50;
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  border-radius: 999px; box-shadow: var(--elev-3);
+  animation: batch-in var(--dur-enter) var(--ease) both;
+}
+@keyframes batch-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.batch-bar .batch-count { font-size: var(--fs-sm); color: var(--text-2); padding-right: 8px; border-right: 1px solid var(--border); margin-left: 4px; }
+.batch-bar .batch-count strong { color: var(--text); font-weight: 600; }
+.batch-bar .btn { padding: 6px 12px; font-size: var(--fs-sm); }
+
+/* ============ Drag overlay ============ */
+.drag-overlay {
+  position: fixed; inset: 0; z-index: 70;
+  background: rgba(10, 11, 15, .65);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: grid; place-items: center;
+  pointer-events: none;
+  animation: fade-in var(--dur) var(--ease) both;
+}
+:root[data-theme="light"] .drag-overlay { background: rgba(246,247,251,.7); }
+.drag-overlay .do-inner {
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 40px 60px; text-align: center;
+  background: var(--panel-solid);
+  box-shadow: 0 0 60px rgba(99,102,241,.35);
+}
+.drag-overlay .do-icon { width: 64px; height: 64px; margin: 0 auto 14px; color: var(--accent); }
+.drag-overlay .do-title { font-size: var(--fs-2xl); font-weight: 700; color: var(--text); letter-spacing: var(--tracking-tight); }
+.drag-overlay .do-hint { font-size: var(--fs-base); color: var(--text-2); margin-top: 4px; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============ Command palette ============ */
+.palette-bg {
+  position: fixed; inset: 0; z-index: 65;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: grid; place-items: start center;
+  padding-top: 12vh;
+  animation: fade-in var(--dur) var(--ease) both;
+  padding-left: 20px; padding-right: 20px;
+}
+.palette {
+  width: 100%; max-width: 560px;
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-3);
+  overflow: hidden;
+  animation: palette-in var(--dur-enter) var(--ease) both;
+}
+@keyframes palette-in { from { opacity: 0; transform: translateY(-12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.palette-input-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.palette-icon { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+.palette-input-wrap input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: var(--fs-md); color: var(--text);
+}
+.palette-input-wrap input::placeholder { color: var(--muted); }
+.palette-kbd {
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  font-size: var(--fs-xs); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+}
+.palette-list { list-style: none; margin: 0; padding: 6px; max-height: 50vh; overflow-y: auto; }
+.palette-empty { padding: 14px; text-align: center; color: var(--muted); font-size: var(--fs-sm); }
+.palette-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease);
+}
+.palette-item:hover, .palette-item.selected { background: var(--panel-2); }
+.palette-item.selected { box-shadow: inset 0 0 0 1px var(--accent); }
+.pi-icon {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: grid; place-items: center; flex-shrink: 0;
+  background: linear-gradient(135deg, hsla(var(--hue, 220), 70%, 60%, .15), hsla(var(--hue, 220), 70%, 50%, .05));
+  border: 1px solid hsla(var(--hue, 220), 70%, 50%, .25);
+  font-size: var(--fs-base);
+}
+.pi-label { flex: 1; font-size: var(--fs-base); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-meta { font-size: var(--fs-sm); color: var(--muted); }
+.pi-sep { padding: 4px 10px; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.palette-foot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 14px; border-top: 1px solid var(--border);
+  font-size: var(--fs-xs); color: var(--muted);
+}
+.palette-foot .palette-hint { display: inline-flex; align-items: center; gap: 4px; }
+.palette-foot .spacer { flex: 1; }
+.palette-foot .kbd { padding: 1px 5px; font-size: 10px; }
+
+/* ============ Toasts ============ */
+.toast-wrap { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 10px; z-index: 60; }
+.toast {
+  min-width: 240px; max-width: 340px;
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: var(--elev-2);
+  display: flex; align-items: center; gap: 10px;
+  animation: toast-in var(--dur-enter) var(--ease) both;
+  font-size: var(--fs-md);
+}
+.toast.out { animation: toast-out var(--dur-enter) var(--ease) forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(8px) scale(.98); } }
+.toast .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.toast.ok .dot { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+.toast.err .dot { background: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
+.toast.info .dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
+
+/* ============ Modal ============ */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: grid; place-items: center; z-index: 50;
+  animation: fade-in var(--dur) var(--ease) both;
+  padding: 20px;
+}
+.modal {
+  background: var(--panel-solid); border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: 24px; width: min(560px, 100%);
+  box-shadow: var(--elev-2);
+  animation: pop-in var(--dur-enter) var(--ease) both;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal.out { animation: pop-out var(--dur-enter) var(--ease) both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes pop-out { to { opacity: 0; transform: translateY(10px) scale(.97); } }
+.modal h3 { margin: 0 0 4px; font-size: var(--fs-lg); font-weight: 650; letter-spacing: var(--tracking-tight); }
+.modal .sub { color: var(--text-2); font-size: var(--fs-base); margin: 0 0 16px; max-width: var(--reading); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+/* Shortcuts list */
+.shortcut-list { display: flex; flex-direction: column; gap: 0; }
+.shortcut-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.shortcut-row:last-child { border-bottom: none; }
+.shortcut-row .desc { color: var(--text-2); font-size: var(--fs-base); }
+.shortcut-row .keys { display: inline-flex; gap: 4px; align-items: center; }
+.shortcut-row .keys .kbd { min-width: 22px; text-align: center; }
+
+/* ============ Admin user list ============ */
+.user-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.user-row:last-child { border-bottom: none; }
+.user-row .info { flex: 1; min-width: 0; }
+.user-row .uname { font-weight: 600; }
+.user-row .meta { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
+.pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 500; letter-spacing: .02em; }
+.pill.admin { background: rgba(99,102,241,.2); color: var(--accent-2); border: 1px solid rgba(99,102,241,.35); }
+.pill.user { background: var(--panel-2); color: var(--text-2); border: 1px solid var(--border); }
+.pill.disabled { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+
+/* ============ Responsive ============ */
+@media (max-width: 820px) {
+  .hero-stats { grid-template-columns: 1fr; }
+  .files-head { display: none; }
+  .file-row { grid-template-columns: 36px 1fr; gap: 6px; padding: 14px 16px; }
+  .file-row .file-meta { grid-column: 2; font-size: var(--fs-sm); }
+  .file-row .file-actions { grid-column: 2; justify-content: flex-start; }
+  main.shell { padding: 16px; }
+  .app-header { padding: 12px 14px; gap: 8px; }
+  .app-header .status-chip { display: none; }
+  .hero { padding: 22px 18px; }
+  .kpi { padding: 18px 18px; }
+  .toolbar .right { margin-left: 0; width: 100%; }
+  .search-wrap { max-width: none; }
+  .files-card.view-grid #filesBody { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .statusbar { font-size: var(--fs-xs); gap: 10px; padding: 10px 14px; }
+  .statusbar .sep { display: none; }
+  .upload-tray { right: 12px; left: 12px; bottom: 12px; width: auto; }
+  .batch-bar { left: 12px; right: 12px; transform: none; justify-content: center; flex-wrap: wrap; }
+  .batch-bar { animation: batch-in-mobile var(--dur-enter) var(--ease) both; }
+  @keyframes batch-in-mobile { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+}
+
+@media (max-width: 480px) {
+  .app-header .brand span.brand-name { display: none; }
+  .palette-bg { padding-top: 6vh; }
+}
+
+/* ============ Reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body::before, body::after { animation: none; }
+  .logo-orb { animation: none; }
+  .hero::before { animation: none; }
+  .kpi-fill::after { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="noise" aria-hidden="true"></div>
+
+<!-- ============ AUTH ============ -->
+<div id="authView" class="center-wrap">
+  <div class="auth-card">
+    <div class="brand-mark">
+      <div class="logo-orb"></div>
+      <div>
+        <div class="brand-name">HomeLite</div>
+        <div class="brand-tag">Private cloud, one binary.</div>
+      </div>
+    </div>
+    <h1 id="authTitle">Welcome back</h1>
+    <p class="sub" id="authSub">Sign in to access your private cloud.</p>
+    <div class="field">
+      <label for="authUser">Username</label>
+      <input id="authUser" autocomplete="username" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="authPass">Password</label>
+      <input id="authPass" type="password" autocomplete="current-password">
+    </div>
+    <button class="btn primary btn-full" id="authBtn">Sign in</button>
+    <div class="error" id="authErr" role="alert" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appView" class="hidden">
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-orb"></div>
+      <span class="brand-name">HomeLite</span>
+    </div>
+    <div class="status-chip">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="serverChip">…</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="paletteBtn" aria-label="Open command palette" title="Command palette (Ctrl K)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme (Ctrl J)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button class="icon-btn" id="adminBtn" style="display:none" aria-label="Admin settings" title="Admin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="icon-btn" id="profileBtn" aria-label="Open profile" title="Profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+    <div class="avatar" id="avatar" aria-hidden="true">?</div>
+    <button class="icon-btn" id="logoutBtn" aria-label="Sign out" title="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-label="Overview">
+      <div class="hero-inner">
+        <h1 id="heroGreeting">Welcome home.</h1>
+        <p class="greet">Your files live on this machine. Nothing leaves without you.</p>
+
+        <div class="kpi" id="kpiBlock">
+          <div class="kpi-top">
+            <span class="kpi-label">Storage used</span>
+            <span class="kpi-pct" id="kpiPct">0%</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-value" id="statUsed">0 B</span>
+            <span class="kpi-sub" id="statQuota">of 50 GB</span>
+            <span class="kpi-hint" id="kpiHint"></span>
+          </div>
+          <div class="kpi-bar"><div class="kpi-fill" id="usageFill"></div></div>
+        </div>
+
+        <div class="recent-folders hidden" id="recentFolders">
+          <span class="rf-label">Jump to folder</span>
+          <div class="rf-list" id="rfList"></div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="label">Files</div>
+            <div class="value" id="statFiles">0</div>
+            <div class="hint">stored on this server</div>
+          </div>
+          <div class="stat">
+            <div class="label">Server uptime</div>
+            <div class="value" id="statUptime">0m</div>
+            <div class="hint" id="statServed">0 B served</div>
+          </div>
+          <div class="stat">
+            <div class="label">Bandwidth</div>
+            <div class="value" id="statBandwidth">0 B</div>
+            <div class="hint">transferred to date</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="toolbar" role="toolbar" aria-label="File actions">
+      <div class="left">
+        <button class="btn primary" id="uploadBtn" title="Upload (U)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload
+        </button>
+        <button class="btn" id="newFolderBtn" title="New folder (N)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+          New folder
+        </button>
+        <input id="filePicker" type="file" multiple class="hidden">
+      </div>
+      <div class="right">
+        <div class="search-wrap">
+          <svg class="s-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="search" placeholder="Search files…" aria-label="Search files">
+          <span class="search-kbd">/</span>
+        </div>
+        <div class="seg" role="group" aria-label="View mode">
+          <button id="viewList" aria-pressed="true" title="List view" aria-label="List view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+          <button id="viewGrid" aria-pressed="false" title="Grid view" aria-label="Grid view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </button>
+        </div>
+        <button class="kbd-btn" id="shortcutsBtn" aria-label="Keyboard shortcuts" title="Shortcuts (?)">?</button>
+      </div>
+    </div>
+
+    <div class="chips" id="chips" style="display:none">
+      <button class="chip active" data-filter="all" aria-pressed="true">All <span class="count" id="count-all">0</span></button>
+      <button class="chip" data-filter="images" aria-pressed="false">Images <span class="count" id="count-images">0</span></button>
+      <button class="chip" data-filter="videos" aria-pressed="false">Videos <span class="count" id="count-videos">0</span></button>
+      <button class="chip" data-filter="audio" aria-pressed="false">Audio <span class="count" id="count-audio">0</span></button>
+      <button class="chip" data-filter="documents" aria-pressed="false">Documents <span class="count" id="count-documents">0</span></button>
+      <button class="chip" data-filter="archives" aria-pressed="false">Archives <span class="count" id="count-archives">0</span></button>
+      <button class="chip" data-filter="code" aria-pressed="false">Code <span class="count" id="count-code">0</span></button>
+    </div>
+
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+
+    <div class="files-card view-list" id="filesCard">
+      <div class="files-head" role="row">
+        <div data-no-sort></div>
+        <div data-sort="name" id="hName" role="columnheader">Name</div>
+        <div data-sort="size" id="hSize" role="columnheader">Size</div>
+        <div data-sort="date" id="hDate" role="columnheader">Uploaded</div>
+        <div data-no-sort style="text-align:right">Actions</div>
+      </div>
+      <div id="filesBody" role="rowgroup"></div>
+      <div class="empty hidden" id="emptyState">
+        <svg class="illus" viewBox="0 0 120 96" aria-hidden="true">
+          <path class="illus-cloud" d="M30 60 Q15 60 15 45 Q15 32 30 32 Q35 18 50 18 Q65 18 70 32 Q85 32 85 45 Q85 60 70 60 Z"/>
+          <path class="illus-folder" d="M40 70 L50 60 L80 60 L80 85 L40 85 Z"/>
+          <g class="illus-arrow-anim">
+            <path class="illus-arrow" d="M60 80 L60 65 M55 70 L60 65 L65 70"/>
+          </g>
+        </svg>
+        <div class="title">Nothing here yet</div>
+        <div class="hint">This folder is empty. Drop a file here, or start with one of these.</div>
+        <div class="dz-actions">
+          <button class="btn primary" data-empty-action="upload">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload a file
+          </button>
+          <button class="btn" data-empty-action="mkdir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            New folder
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="statusbar" id="statusBar">
+      <div class="group">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="lbl">Status</span>
+        <span class="val">Online</span>
+      </div>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="group">
+        <span class="lbl">LAN IP</span>
+        <span class="val" id="sbIp">—</span>
+      </div>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="group">
+        <span class="lbl">Uptime</span>
+        <span class="val" id="sbUptime">0m</span>
+      </div>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="group">
+        <span class="lbl">Files served</span>
+        <span class="val" id="sbFiles">0</span>
+      </div>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="group">
+        <span class="lbl">Bandwidth</span>
+        <span class="val" id="sbBandwidth">0 B</span>
+      </div>
+      <div class="spacer"></div>
+      <span class="ver" id="sbVer">HomeLite</span>
+    </div>
+  </main>
+</div>
+
+<!-- ============ Upload tray ============ -->
+<div class="upload-tray hidden" id="uploadTray" aria-live="polite" aria-label="Active uploads">
+  <div class="tray-head">
+    <span class="tray-title">Uploads</span>
+    <button class="tray-clear" id="trayClear" aria-label="Clear finished uploads">Clear</button>
+  </div>
+  <div class="tray-list" id="trayList"></div>
+</div>
+
+<!-- ============ Batch action bar ============ -->
+<div class="batch-bar hidden" id="batchBar" aria-live="polite" aria-label="Batch actions">
+  <span class="batch-count"><strong id="batchCount">0</strong> selected</span>
+  <button class="btn" id="batchDownload">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download
+  </button>
+  <button class="btn" id="batchMove">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+    Move
+  </button>
+  <button class="btn danger" id="batchDelete">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    Delete
+  </button>
+  <button class="btn ghost" id="batchClear" aria-label="Clear selection">Clear</button>
+</div>
+
+<!-- ============ Drag overlay ============ -->
+<div class="drag-overlay hidden" id="dragOverlay" aria-hidden="true">
+  <div class="do-inner">
+    <svg class="do-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div class="do-title">Drop to upload</div>
+    <div class="do-hint">Files will be added to your current folder</div>
+  </div>
+</div>
+
+<!-- ============ Command palette ============ -->
+<div class="palette-bg hidden" id="paletteBg" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="palette">
+    <div class="palette-input-wrap">
+      <svg class="palette-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="paletteInput" placeholder="Search files and actions…" aria-label="Search files and actions" autocomplete="off" spellcheck="false">
+      <span class="palette-kbd">Esc</span>
+    </div>
+    <ul class="palette-list" id="paletteList" role="listbox"></ul>
+    <div class="palette-foot">
+      <span class="palette-hint"><span class="kbd">↑</span><span class="kbd">↓</span> navigate</span>
+      <span class="palette-hint"><span class="kbd">↵</span> select</span>
+      <span class="palette-hint"><span class="kbd">Esc</span> close</span>
+      <div class="spacer"></div>
+      <span class="palette-hint"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal host ============ -->
+<div id="modalHost"></div>
+
+<!-- ============ Toasts ============ -->
+<div class="toast-wrap" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============ State ============
+  var $ = function (id) { return document.getElementById(id); };
+  var csrf = null, me = null, cwd = null, sort = 'name', order = 'asc', search = '';
+  var crumbStack = [];
+  var viewMode = localStorage.getItem('hl_view') || 'list';
+  var activeFilter = 'all';
+  var lastRows = [];
+  var selected = new Set();
+  var lastShiftAnchor = null;
+  var uploadTasks = [];
+  var dragDepth = 0;
+  var paletteState = { items: [], filtered: [], selected: 0, query: '' };
+  var prevFocus = null;
+  var prevStats = { used: 0, files: 0, served: 0, uptime: 0 };
+  var gChord = false, gChordTimer = null;
+
+  // ============ Helpers ============
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function fmtSize(n) {
+    if (n == null) return '';
+    var u = ['B','KB','MB','GB','TB','PB'], i = 0, x = Number(n);
+    while (x >= 1024 && i < u.length - 1) { x /= 1024; i++; }
+    return (i === 0 ? x : x.toFixed(1)) + ' ' + u[i];
+  }
+  function fmtUptime(sec) {
+    var s = Math.max(0, Math.floor(Number(sec) || 0));
+    if (s < 60) return s + 's';
+    var d = Math.floor(s / 86400);
+    var h = Math.floor((s % 86400) / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    if (d > 0) return d + 'd ' + h + 'h';
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  }
+  function fmtDate(s) {
+    try {
+      var d = new Date(s);
+      var diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+      if (diff < 86400) return Math.floor(diff/3600) + ' h ago';
+      if (diff < 604800) return Math.floor(diff/86400) + ' d ago';
+      return d.toLocaleDateString();
+    } catch (e) { return s; }
+  }
+  function fmtEta(seconds) {
+    if (!isFinite(seconds) || seconds <= 0) return '—';
+    if (seconds < 60) return Math.round(seconds) + 's';
+    var m = Math.floor(seconds / 60);
+    var s = Math.round(seconds % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function hashHue(s) {
+    var h = 0;
+    s = String(s || '');
+    for (var i = 0; i < s.length; i++) {
+      h = (h * 31 + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h) % 360;
+  }
+  function avatarGradient(username) {
+    var h = hashHue(username);
+    return 'linear-gradient(135deg, hsl(' + h + ', 70%, 55%), hsl(' + ((h + 50) % 360) + ', 65%, 45%))';
+  }
+
+  // File kind classification
+  var EXT = {
+    images: ['png','jpg','jpeg','gif','webp','svg','bmp','heic','heif','avif','tiff','tif','raw'],
+    videos: ['mp4','mov','mkv','webm','avi','m4v','flv','wmv','3gp'],
+    audio: ['mp3','wav','flac','ogg','m4a','aac','opus','aiff'],
+    archives: ['zip','rar','7z','tar','gz','bz2','xz','tgz','tbz2','zst'],
+    documents: ['pdf','doc','docx','txt','md','rtf','odt','pages','epub','tex'],
+    sheets: ['xls','xlsx','csv','ods','numbers'],
+    slides: ['ppt','pptx','odp','key'],
+    code: ['js','ts','py','go','rs','c','cpp','java','html','css','json','sh','rb','php','swift','kt','scala','yml','yaml','toml','sql','vue','jsx','tsx']
+  };
+  var KIND_HUE = {
+    folder: 243, images: 330, videos: 280, audio: 190,
+    pdf: 0, archive: 38, doc: 220, sheet: 140, slide: 25,
+    code: 175, other: 220
+  };
+  var KIND_EMOJI = {
+    folder: '📁', images: '🖼️', videos: '🎬', audio: '🎵',
+    pdf: '📕', archive: '📦', doc: '📝', sheet: '📊', slide: '📽️',
+    code: '💻', other: '📄'
+  };
+  function fileKind(name, isDir) {
+    if (isDir) return 'folder';
+    var ext = (name.split('.').pop() || '').toLowerCase();
+    for (var k in EXT) {
+      if (EXT[k].indexOf(ext) !== -1) {
+        if (k === 'documents' && ext === 'pdf') return 'pdf';
+        if (k === 'documents') return 'doc';
+        return k;
+      }
+    }
+    return 'other';
+  }
+  function kindHue(kind) { return KIND_HUE[kind] || KIND_HUE.other; }
+  function kindEmoji(kind) { return KIND_EMOJI[kind] || KIND_EMOJI.other; }
+
+  function filterFn(kind, f) {
+    if (kind === 'all') return true;
+    if (f.is_dir) return false;
+    return fileKind(f.name, false) === kind;
+  }
+  function countKind(kind, rows) {
+    return rows.filter(function (f) { return filterFn(kind, f); }).length;
+  }
+
+  function isTyping() {
+    var t = document.activeElement;
+    if (!t) return false;
+    var tag = t.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
+  }
+
+  // ============ API ============
+  function api(path, opts) {
+    opts = opts || {};
+    var o = Object.assign({ credentials: 'same-origin' }, opts);
+    o.headers = Object.assign({}, o.headers || {});
+    if (o.body && typeof o.body !== 'string' && !(o.body instanceof FormData)) {
+      o.headers['Content-Type'] = 'application/json';
+      o.body = JSON.stringify(o.body);
+    }
+    if (o.method && o.method !== 'GET' && csrf) o.headers['X-CSRF-Token'] = csrf;
+    return fetch(path, o).then(function (r) {
+      var ct = r.headers.get('content-type') || '';
+      if (ct.indexOf('application/json') !== -1) {
+        return r.json().then(function (j) {
+          if (!r.ok) throw new Error(j.message || j.error || ('HTTP ' + r.status));
+          return j;
+        });
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r;
+    });
+  }
+
+  // ============ Toast ============
+  function toast(msg, kind) {
+    kind = kind || 'ok';
+    var el = document.createElement('div');
+    el.className = 'toast ' + kind;
+    var dot = document.createElement('span');
+    dot.className = 'dot';
+    var text = document.createElement('span');
+    text.textContent = msg;
+    el.appendChild(dot);
+    el.appendChild(text);
+    $('toasts').appendChild(el);
+    setTimeout(function () {
+      el.classList.add('out');
+      setTimeout(function () { if (el.parentNode) el.remove(); }, 400);
+    }, 3200);
+  }
+
+  // ============ Modal ============
+  function openModal(html, onMount) {
+    closeModal(true);
+    var host = $('modalHost');
+    host.innerHTML = '<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true">' + html + '</div></div>';
+    var bg = host.firstElementChild;
+    var modalEl = bg.querySelector('.modal');
+    prevFocus = document.activeElement;
+    bg.addEventListener('click', function (e) {
+      if (e.target === bg) closeModal();
+    });
+    // Focus trap
+    trapFocus(modalEl);
+    if (onMount) onMount(modalEl);
+    // Focus first focusable
+    setTimeout(function () {
+      var f = modalEl.querySelector('input, button, [href], select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (f) f.focus();
+    }, 0);
+  }
+  function closeModal(immediate) {
+    var host = $('modalHost');
+    var bg = host.firstElementChild;
+    if (!bg) return;
+    var modalEl = bg.querySelector('.modal');
+    if (modalEl && !immediate) {
+      modalEl.classList.add('out');
+      setTimeout(function () {
+        host.innerHTML = '';
+        if (prevFocus && prevFocus.focus) prevFocus.focus();
+      }, 200);
+    } else {
+      host.innerHTML = '';
+      if (prevFocus && prevFocus.focus) prevFocus.focus();
+    }
+  }
+  function trapFocus(modal) {
+    modal.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var focusable = modal.querySelectorAll('input, button, [href], select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  }
+
+  function confirmModal(opts) {
+    return new Promise(function (resolve) {
+      openModal(
+        '<h3>' + esc(opts.title) + '</h3>' +
+        '<p class="sub">' + esc(opts.message) + '</p>' +
+        '<div class="modal-actions">' +
+          '<button class="btn" id="mCancel">' + esc(opts.cancelText || 'Cancel') + '</button>' +
+          '<button class="btn ' + (opts.danger ? 'danger' : 'primary') + '" id="mOk">' + esc(opts.confirmText || 'Confirm') + '</button>' +
+        '</div>',
+        function (m) {
+          m.querySelector('#mOk').addEventListener('click', function () { closeModal(); resolve(true); });
+          m.querySelector('#mCancel').addEventListener('click', function () { closeModal(); resolve(false); });
+        }
+      );
+    });
+  }
+  function promptModal(opts) {
+    return new Promise(function (resolve) {
+      var labelHtml = opts.label ? '<label>' + esc(opts.label) + '</label>' : '';
+      openModal(
+        '<h3>' + esc(opts.title) + '</h3>' +
+        (opts.message ? '<p class="sub">' + esc(opts.message) + '</p>' : '') +
+        '<div class="field">' + labelHtml +
+          '<input id="mInput" type="' + (opts.type || 'text') + '" value="' + esc(opts.value || '') + '" placeholder="' + esc(opts.placeholder || '') + '">' +
+        '</div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn" id="mCancel">Cancel</button>' +
+          '<button class="btn primary" id="mOk">' + esc(opts.confirmText || 'OK') + '</button>' +
+        '</div>',
+        function (m) {
+          var input = m.querySelector('#mInput');
+          input.focus();
+          input.select();
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); var v = input.value; closeModal(); resolve(v); }
+            if (e.key === 'Escape') { closeModal(); resolve(null); }
+          });
+          m.querySelector('#mOk').addEventListener('click', function () { var v = input.value; closeModal(); resolve(v); });
+          m.querySelector('#mCancel').addEventListener('click', function () { closeModal(); resolve(null); });
+        }
+      );
+    });
+  }
+
+  // ============ Theme ============
+  function applyTheme(t) {
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.dataset.theme = t;
+      localStorage.setItem('hl_theme', t);
+    } else {
+      var prefersLight = matchMedia('(prefers-color-scheme: light)').matches;
+      document.documentElement.dataset.theme = prefersLight ? 'light' : 'dark';
+    }
+  }
+  $('themeBtn').addEventListener('click', function () {
+    var cur = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    applyTheme(cur);
+  });
+
+  // ============ Animated counter ============
+  function animateNumber(el, from, to, duration, formatter) {
+    if (!('requestAnimationFrame' in window) || from === to) {
+      el.textContent = formatter(to);
+      return;
+    }
+    var start = performance.now();
+    function step(t) {
+      var p = Math.min(1, (t - start) / duration);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var v = from + (to - from) * eased;
+      el.textContent = formatter(v);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ============ Status / Me ============
+  function refreshStatus() {
+    return api('/api/status').then(function (s) {
+      $('serverChip').textContent = (s.lan_ip || '127.0.0.1') + ':' + s.port;
+      animateNumber($('statFiles'), prevStats.files, s.files, 600, function (v) { return Math.round(v).toLocaleString(); });
+      prevStats.files = s.files;
+      $('statUptime').textContent = fmtUptime(s.uptime_secs);
+      $('statServed').textContent = fmtSize(s.bytes_served) + ' served';
+      $('statBandwidth').textContent = fmtSize(s.bytes_served);
+      $('sbIp').textContent = (s.lan_ip || '127.0.0.1') + ':' + s.port;
+      $('sbUptime').textContent = fmtUptime(s.uptime_secs);
+      $('sbFiles').textContent = s.files.toLocaleString();
+      $('sbBandwidth').textContent = fmtSize(s.bytes_served);
+      if (s.version) $('sbVer').textContent = 'HomeLite ' + s.version;
+    }).catch(function () {});
+  }
+
+  function refreshMe() {
+    return api('/api/me').then(function (r) {
+      me = r.user; csrf = r.csrf;
+      $('avatar').textContent = me.username.charAt(0).toUpperCase();
+      $('avatar').style.background = avatarGradient(me.username);
+      $('adminBtn').style.display = me.role === 'admin' ? '' : 'none';
+      $('heroGreeting').textContent = 'Welcome home, ' + me.username + '.';
+      var q = me.quota_bytes > 0 ? me.quota_bytes : 0;
+      var pct = q > 0 ? Math.min(100, (me.used_bytes / q) * 100) : 0;
+      animateNumber($('statUsed'), prevStats.used, me.used_bytes, 600, fmtSize);
+      prevStats.used = me.used_bytes;
+      $('statQuota').textContent = q > 0 ? 'of ' + fmtSize(q) : 'no quota set';
+      $('usageFill').style.width = pct + '%';
+      $('kpiPct').textContent = (q > 0 ? Math.round(pct) + '%' : '—');
+      var kpi = $('kpiBlock');
+      var hint = $('kpiHint');
+      if (q > 0 && pct > 90) {
+        kpi.classList.add('warning');
+        hint.textContent = 'Almost full';
+      } else {
+        kpi.classList.remove('warning');
+        hint.textContent = '';
+      }
+    }).catch(function () {});
+  }
+
+  // ============ View toggle ============
+  function setView(v) {
+    viewMode = v;
+    localStorage.setItem('hl_view', v);
+    var card = $('filesCard');
+    card.classList.toggle('view-grid', v === 'grid');
+    card.classList.toggle('view-list', v === 'list');
+    $('viewList').setAttribute('aria-pressed', v === 'list');
+    $('viewGrid').setAttribute('aria-pressed', v === 'grid');
+  }
+  $('viewList').addEventListener('click', function () { setView('list'); });
+  $('viewGrid').addEventListener('click', function () { setView('grid'); });
+
+  // ============ Filter chips ============
+  function setFilter(kind) {
+    activeFilter = kind;
+    $('chips').querySelectorAll('.chip').forEach(function (c) {
+      c.classList.toggle('active', c.dataset.filter === kind);
+      c.setAttribute('aria-pressed', c.dataset.filter === kind);
+    });
+    renderRows();
+  }
+  $('chips').addEventListener('click', function (e) {
+    var c = e.target.closest('.chip');
+    if (c) setFilter(c.dataset.filter);
+  });
+
+  // ============ Crumbs ============
+  function renderCrumbs() {
+    var c = $('crumbs'); c.innerHTML = '';
+    var root = document.createElement('button');
+    root.textContent = 'Home';
+    root.addEventListener('click', function () { goHome(); });
+    c.appendChild(root);
+    for (var i = 0; i < crumbStack.length; i++) {
+      var sep = document.createElement('span');
+      sep.className = 'sep';
+      sep.textContent = '/';
+      c.appendChild(sep);
+      (function (idx) {
+        var b = crumbStack[idx];
+        var btn = document.createElement('button');
+        btn.textContent = b.name;
+        btn.addEventListener('click', function () {
+          cwd = b.id;
+          crumbStack = crumbStack.slice(0, idx + 1);
+          renderCrumbs();
+          loadFiles();
+        });
+        c.appendChild(btn);
+      })(i);
+    }
+  }
+  function goHome() {
+    cwd = null; crumbStack = []; selected.clear(); updateBatchBar();
+    renderCrumbs();
+    loadFiles();
+  }
+
+  function updateSortHeaders() {
+    ['hName','hSize','hDate'].forEach(function (id) {
+      var el = $(id);
+      el.classList.remove('sorted');
+      var arrow = el.querySelector('.sort-arrow');
+      if (arrow) arrow.remove();
+    });
+    var map = { name: 'hName', size: 'hSize', date: 'hDate' };
+    var el = $(map[sort]);
+    if (el) {
+      el.classList.add('sorted');
+      var arrow = document.createElement('span');
+      arrow.className = 'sort-arrow';
+      arrow.textContent = order === 'asc' ? '↑' : '↓';
+      el.appendChild(arrow);
+    }
+  }
+
+  // ============ Files ============
+  function loadFiles() {
+    var params = new URLSearchParams();
+    if (cwd) params.set('parent_id', cwd);
+    if (search) params.set('q', search);
+    params.set('sort', sort);
+    params.set('order', order);
+    return api('/api/files?' + params.toString()).then(function (r) {
+      lastRows = r.files || [];
+      updateChipCounts();
+      renderRecentFolders();
+      renderRows();
+      updateSortHeaders();
+    });
+  }
+
+  function updateChipCounts() {
+    ['all','images','videos','audio','documents','archives','code'].forEach(function (k) {
+      var el = $('count-' + k);
+      if (el) el.textContent = countKind(k, lastRows);
+    });
+    var total = lastRows.length;
+    var chipsBar = $('chips');
+    chipsBar.style.display = total > 0 ? '' : 'none';
+  }
+
+  function renderRecentFolders() {
+    var folders = lastRows.filter(function (f) { return f.is_dir; });
+    folders.sort(function (a, b) {
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
+    var top = folders.slice(0, 3);
+    var wrap = $('recentFolders');
+    var list = $('rfList');
+    if (top.length === 0) {
+      wrap.classList.add('hidden');
+      return;
+    }
+    wrap.classList.remove('hidden');
+    list.innerHTML = '';
+    top.forEach(function (f) {
+      var chip = document.createElement('button');
+      chip.className = 'rf-chip';
+      chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' +
+                      '<span>' + esc(f.name) + '</span>';
+      chip.title = 'Open ' + f.name;
+      chip.addEventListener('click', function () {
+        crumbStack.push({ id: f.id, name: f.name });
+        cwd = f.id;
+        renderCrumbs();
+        loadFiles();
+      });
+      list.appendChild(chip);
+    });
+  }
+
+  function renderRows() {
+    var rows = lastRows.filter(function (f) { return filterFn(activeFilter, f); });
+    var body = $('filesBody');
+    body.innerHTML = '';
+    var empty = $('emptyState');
+    if (rows.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    rows.forEach(function (f, idx) {
+      var kind = fileKind(f.name, f.is_dir);
+      var hue = kindHue(kind);
+      var emoji = kindEmoji(kind);
+      var checked = selected.has(f.id) ? 'checked' : '';
+      var row = document.createElement('div');
+      row.className = 'file-row' + (selected.has(f.id) ? ' selected' : '');
+      row.dataset.id = f.id;
+      row.dataset.dir = f.is_dir;
+      row.dataset.name = f.name;
+      row.style.setProperty('--hue', hue);
+      row.style.animationDelay = (idx * 20) + 'ms';
+
+      var actionsHtml = '';
+      if (!f.is_dir) actionsHtml += rowBtnHtml('dl', f.id, 'Download', 'download');
+      actionsHtml += rowBtnHtml('ren', f.id, 'Rename', 'rename');
+      actionsHtml += rowBtnHtml('mov', f.id, 'Move', 'move');
+      actionsHtml += rowBtnHtml('del', f.id, 'Delete', 'delete', 'danger');
+
+      row.innerHTML =
+        '<div class="row-checkbox">' +
+          '<input type="checkbox" data-check="' + f.id + '" aria-label="Select ' + esc(f.name) + '" ' + checked + '>' +
+        '</div>' +
+        '<div class="file-name">' +
+          '<div class="file-icon">' + emoji + '</div>' +
+          '<a href="#" data-open="' + f.id + '" data-dir="' + f.is_dir + '">' + esc(f.name) + '</a>' +
+        '</div>' +
+        '<div class="file-meta">' + (f.is_dir ? '—' : fmtSize(f.size)) + '</div>' +
+        '<div class="file-meta">' + fmtDate(f.updated_at) + '</div>' +
+        '<div class="file-actions">' + actionsHtml + '</div>';
+
+      body.appendChild(row);
+      attachRowHandlers(row, f);
+    });
+    updateBatchBar();
+  }
+
+  function rowBtnHtml(kind, id, title, iconType, extra) {
+    var cls = 'row-btn' + (extra ? ' ' + extra : '');
+    var svg = '';
+    if (iconType === 'download') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    else if (iconType === 'rename') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    else if (iconType === 'move') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>';
+    else if (iconType === 'delete') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    return '<button class="' + cls + '" data-' + kind + '="' + id + '" title="' + title + '" aria-label="' + title + '">' + svg + '</button>';
+  }
+
+  function attachRowHandlers(row, f) {
+    var cb = row.querySelector('[data-check]');
+    if (cb) {
+      cb.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        handleCheckboxClick(e, f.id);
+      });
+    }
+    var link = row.querySelector('[data-open]');
+    if (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (f.is_dir) {
+          crumbStack.push({ id: f.id, name: f.name });
+          cwd = f.id;
+          selected.clear(); updateBatchBar();
+          renderCrumbs();
+          loadFiles();
+        } else {
+          window.location.href = '/api/files/' + f.id + '/download';
+        }
+      });
+    }
+    var dl = row.querySelector('[data-dl]');
+    if (dl) dl.addEventListener('click', function (e) { e.stopPropagation(); window.location.href = '/api/files/' + f.id + '/download'; });
+    var ren = row.querySelector('[data-ren]');
+    if (ren) ren.addEventListener('click', function (e) { e.stopPropagation(); renameFile(f.id); });
+    var mov = row.querySelector('[data-mov]');
+    if (mov) mov.addEventListener('click', function (e) { e.stopPropagation(); moveFile(f.id); });
+    var del = row.querySelector('[data-del]');
+    if (del) del.addEventListener('click', function (e) { e.stopPropagation(); deleteFile(f.id); });
+
+    row.addEventListener('click', function (e) {
+      // If clicked on row itself (not checkbox/link/button)
+      if (e.target === row || e.target.classList.contains('file-name') || e.target.classList.contains('file-meta') || e.target.classList.contains('file-icon')) {
+        if (f.is_dir) {
+          crumbStack.push({ id: f.id, name: f.name });
+          cwd = f.id;
+          selected.clear(); updateBatchBar();
+          renderCrumbs();
+          loadFiles();
+        } else {
+          window.location.href = '/api/files/' + f.id + '/download';
+        }
+      }
+    });
+  }
+
+  // ============ Multi-select ============
+  function handleCheckboxClick(e, id) {
+    if (e.shiftKey && lastShiftAnchor) {
+      selectRange(lastShiftAnchor, id);
+    } else if (e.ctrlKey || e.metaKey) {
+      if (selected.has(id)) selected.delete(id);
+      else selected.add(id);
+      lastShiftAnchor = id;
+    } else {
+      // Single click: clear others, toggle this one
+      var wasChecked = selected.has(id);
+      selected.clear();
+      if (!wasChecked) selected.add(id);
+      lastShiftAnchor = id;
+    }
+    renderSelectionState();
+    updateBatchBar();
+  }
+  function selectRange(fromId, toId) {
+    var fromIdx = -1, toIdx = -1;
+    var rows = document.querySelectorAll('.file-row');
+    rows.forEach(function (r, i) {
+      if (r.dataset.id === fromId) fromIdx = i;
+      if (r.dataset.id === toId) toIdx = i;
+    });
+    if (fromIdx === -1 || toIdx === -1) { selected.add(toId); return; }
+    var min = Math.min(fromIdx, toIdx);
+    var max = Math.max(fromIdx, toIdx);
+    rows.forEach(function (r, i) {
+      if (i >= min && i <= max) selected.add(r.dataset.id);
+    });
+  }
+  function renderSelectionState() {
+    document.querySelectorAll('.file-row').forEach(function (r) {
+      var cb = r.querySelector('[data-check]');
+      var checked = selected.has(r.dataset.id);
+      if (cb) cb.checked = checked;
+      r.classList.toggle('selected', checked);
+    });
+  }
+  function updateBatchBar() {
+    var n = selected.size;
+    var bar = $('batchBar');
+    $('batchCount').textContent = n;
+    bar.classList.toggle('hidden', n === 0);
+  }
+  function clearSelection() {
+    selected.clear();
+    lastShiftAnchor = null;
+    renderSelectionState();
+    updateBatchBar();
+  }
+
+  $('batchClear').addEventListener('click', clearSelection);
+  $('batchDownload').addEventListener('click', function () {
+    var ids = Array.from(selected);
+    ids.forEach(function (id, i) {
+      setTimeout(function () {
+        window.location.href = '/api/files/' + id + '/download';
+      }, i * 400);
+    });
+    toast('Downloading ' + ids.length + ' file' + (ids.length > 1 ? 's' : ''), 'info');
+    clearSelection();
+  });
+  $('batchMove').addEventListener('click', function () {
+    var ids = Array.from(selected);
+    promptModal({
+      title: 'Move ' + ids.length + ' item' + (ids.length > 1 ? 's' : ''),
+      message: 'Paste the target folder ID, or leave blank for Home.',
+      label: 'Folder ID',
+      placeholder: 'folder ID (blank = Home)',
+      confirmText: 'Move'
+    }).then(function (v) {
+      if (v === null) return;
+      var parentId = v.trim() || null;
+      Promise.all(ids.map(function (id) {
+        return api('/api/files/' + id + '/move', { method: 'POST', body: { parent_id: parentId } });
+      })).then(function () {
+        toast('Moved ' + ids.length + ' item' + (ids.length > 1 ? 's' : ''));
+        clearSelection();
+        loadFiles();
+      }).catch(function (e) {
+        toast(e.message, 'err');
+      });
+    });
+  });
+  $('batchDelete').addEventListener('click', function () {
+    var ids = Array.from(selected);
+    confirmModal({
+      title: 'Delete ' + ids.length + ' item' + (ids.length > 1 ? 's' : '?'),
+      message: 'This cannot be undone. Files and folders will be removed permanently.',
+      confirmText: 'Delete',
+      danger: true
+    }).then(function (ok) {
+      if (!ok) return;
+      Promise.all(ids.map(function (id) {
+        return api('/api/files/' + id, { method: 'DELETE' });
+      })).then(function () {
+        toast('Deleted ' + ids.length + ' item' + (ids.length > 1 ? 's' : ''));
+        clearSelection();
+        loadFiles();
+        refreshMe();
+      }).catch(function (e) {
+        toast(e.message, 'err');
+      });
+    });
+  });
+
+  // ============ File actions ============
+  function renameFile(id) {
+    promptModal({
+      title: 'Rename',
+      message: 'Enter a new name for this item.',
+      label: 'Name',
+      confirmText: 'Rename'
+    }).then(function (name) {
+      if (name === null || name.trim() === '') return;
+      api('/api/files/' + id + '/rename', { method: 'POST', body: { name: name } })
+        .then(function () { closeModal(); loadFiles(); toast('Renamed'); })
+        .catch(function (e) { toast(e.message, 'err'); });
+    });
+  }
+  function moveFile(id) {
+    promptModal({
+      title: 'Move file',
+      message: 'Paste the target folder ID, or leave blank for Home.',
+      label: 'Folder ID',
+      placeholder: 'folder ID (blank = Home)',
+      confirmText: 'Move'
+    }).then(function (v) {
+      if (v === null) return;
+      var parentId = v.trim() || null;
+      api('/api/files/' + id + '/move', { method: 'POST', body: { parent_id: parentId } })
+        .then(function () { closeModal(); loadFiles(); toast('Moved'); })
+        .catch(function (e) { toast(e.message, 'err'); });
+    });
+  }
+  function deleteFile(id) {
+    confirmModal({
+      title: 'Delete this item?',
+      message: 'This cannot be undone. Files and folders will be removed permanently.',
+      confirmText: 'Delete',
+      danger: true
+    }).then(function (ok) {
+      if (!ok) return;
+      api('/api/files/' + id, { method: 'DELETE' })
+        .then(function () { closeModal(); loadFiles(); refreshMe(); toast('Deleted'); })
+        .catch(function (e) { toast(e.message, 'err'); });
+    });
+  }
+
+  // ============ New folder ============
+  $('newFolderBtn').addEventListener('click', function () {
+    promptModal({
+      title: 'New folder',
+      message: 'Give your folder a name.',
+      label: 'Name',
+      placeholder: 'e.g. Photos',
+      confirmText: 'Create'
+    }).then(function (name) {
+      if (name === null || name.trim() === '') return;
+      api('/api/files/mkdir', { method: 'POST', body: { name: name, parent_id: cwd || '' } })
+        .then(function () { closeModal(); loadFiles(); toast('Folder created'); })
+        .catch(function (e) { toast(e.message, 'err'); });
+    });
+  });
+
+  // ============ Upload tray ============
+  function uploadFiles(fileList, parentId) {
+    if (!fileList || fileList.length === 0) return;
+    var files = Array.prototype.slice.call(fileList);
+    files.forEach(function (f) { startUploadTask(f, parentId); });
+  }
+
+  function startUploadTask(file, parentId) {
+    var taskId = 't' + Math.random().toString(36).slice(2, 10);
+    var task = {
+      id: taskId,
+      file: file,
+      name: file.name,
+      size: file.size,
+      progress: 0,
+      speed: 0,
+      eta: 0,
+      status: 'uploading',
+      startTime: Date.now(),
+      lastTime: Date.now(),
+      lastLoaded: 0,
+      loaded: 0,
+      xhr: null,
+      error: null
+    };
+    uploadTasks.push(task);
+    renderTray();
+    updateTrayItem(task);
+
+    var fd = new FormData();
+    if (parentId) fd.append('parent_id', parentId);
+    fd.append('file', file, file.name);
+
+    var xhr = new XMLHttpRequest();
+    task.xhr = xhr;
+    xhr.open('POST', '/api/files/upload');
+    if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
+
+    xhr.upload.onprogress = function (e) {
+      if (!e.lengthComputable) return;
+      var now = Date.now();
+      var dt = (now - task.lastTime) / 1000;
+      var dl = e.loaded - task.lastLoaded;
+      if (dt > 0) {
+        var speed = dl / dt;
+        // Smooth speed
+        task.speed = task.speed > 0 ? (task.speed * 0.6 + speed * 0.4) : speed;
+      }
+      task.loaded = e.loaded;
+      task.progress = (e.loaded / e.total) * 100;
+      task.eta = task.speed > 0 ? (e.total - e.loaded) / task.speed : 0;
+      task.lastTime = now;
+      task.lastLoaded = e.loaded;
+      updateTrayItem(task);
+    };
+
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        task.status = 'done';
+        task.progress = 100;
+        task.loaded = task.size;
+        updateTrayItem(task);
+        toast('Uploaded ' + file.name);
+        setTimeout(function () { removeTask(taskId); loadFiles(); refreshMe(); }, 2000);
+      } else {
+        task.status = 'error';
+        var msg = 'HTTP ' + xhr.status;
+        try { var j = JSON.parse(xhr.responseText); msg = j.message || j.error || msg; } catch (e) {}
+        task.error = msg;
+        updateTrayItem(task);
+        toast('Upload failed: ' + msg, 'err');
+      }
+    };
+    xhr.onerror = function () {
+      task.status = 'error';
+      task.error = 'network error';
+      updateTrayItem(task);
+      toast('Upload failed: network error', 'err');
+    };
+    xhr.send(fd);
+  }
+
+  function cancelUpload(taskId) {
+    var task = uploadTasks.find(function (t) { return t.id === taskId; });
+    if (!task || task.status !== 'uploading') return;
+    task.xhr.abort();
+    task.status = 'cancelled';
+    updateTrayItem(task);
+    toast('Upload cancelled', 'info');
+    setTimeout(function () { removeTask(taskId); }, 1000);
+  }
+
+  function removeTask(taskId) {
+    uploadTasks = uploadTasks.filter(function (t) { return t.id !== taskId; });
+    renderTray();
+  }
+
+  function renderTray() {
+    var tray = $('uploadTray');
+    var list = $('trayList');
+    tray.classList.toggle('hidden', uploadTasks.length === 0);
+    list.innerHTML = '';
+    uploadTasks.forEach(function (task) {
+      var item = document.createElement('div');
+      item.className = 'upload-item' + (task.status === 'done' ? ' done' : '') + (task.status === 'error' ? ' error' : '');
+      item.dataset.task = task.id;
+      item.innerHTML =
+        '<div class="ui-icon">' + (task.status === 'done' ? '✓' : task.status === 'error' ? '✕' : '↑') + '</div>' +
+        '<div class="ui-info">' +
+          '<div class="ui-name">' + esc(task.name) + '</div>' +
+          '<div class="ui-stats">' +
+            '<span class="ui-progress-text">' + Math.round(task.progress) + '%</span>' +
+            '<span class="ui-size">' + (task.loaded ? fmtSize(task.loaded) + ' / ' : '') + fmtSize(task.size) + '</span>' +
+            '<span class="ui-speed">' + (task.speed > 0 ? fmtSize(task.speed) + '/s' : '—') + '</span>' +
+            '<span class="ui-eta">' + (task.eta > 0 && task.status === 'uploading' ? fmtEta(task.eta) + ' ETA' : '') + '</span>' +
+          '</div>' +
+          '<div class="ui-bar"><div class="ui-fill"></div></div>' +
+        '</div>' +
+        '<button class="ui-cancel" aria-label="Cancel upload">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button>';
+      var cancelBtn = item.querySelector('.ui-cancel');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () { cancelUpload(task.id); });
+      }
+      list.appendChild(item);
+      updateTrayItem(task);
+    });
+  }
+
+  function updateTrayItem(task) {
+    var el = document.querySelector('[data-task="' + task.id + '"]');
+    if (!el) return;
+    el.classList.toggle('done', task.status === 'done');
+    el.classList.toggle('error', task.status === 'error');
+    var fill = el.querySelector('.ui-fill');
+    if (fill) fill.style.width = task.progress + '%';
+    var pt = el.querySelector('.ui-progress-text');
+    if (pt) pt.textContent = Math.round(task.progress) + '%';
+    var sz = el.querySelector('.ui-size');
+    if (sz) sz.textContent = (task.loaded ? fmtSize(task.loaded) + ' / ' : '') + fmtSize(task.size);
+    var sp = el.querySelector('.ui-speed');
+    if (sp) sp.textContent = task.speed > 0 ? fmtSize(task.speed) + '/s' : '—';
+    var eta = el.querySelector('.ui-eta');
+    if (eta) eta.textContent = (task.eta > 0 && task.status === 'uploading' ? fmtEta(task.eta) + ' ETA' : '');
+    var icon = el.querySelector('.ui-icon');
+    if (icon) icon.textContent = task.status === 'done' ? '✓' : task.status === 'error' ? '✕' : '↑';
+    if (task.status === 'done' || task.status === 'error' || task.status === 'cancelled') {
+      var cancel = el.querySelector('.ui-cancel');
+      if (cancel) cancel.style.display = 'none';
+    }
+    if (task.error) {
+      var name = el.querySelector('.ui-name');
+      if (name) name.textContent = task.name + ' — ' + task.error;
+    }
+  }
+
+  $('trayClear').addEventListener('click', function () {
+    uploadTasks = uploadTasks.filter(function (t) { return t.status === 'uploading'; });
+    renderTray();
+  });
+
+  // ============ Upload button + file picker ============
+  $('uploadBtn').addEventListener('click', function () { $('filePicker').click(); });
+  $('filePicker').addEventListener('change', function () {
+    uploadFiles($('filePicker').files, cwd);
+    $('filePicker').value = '';
+  });
+
+  // ============ Empty state CTAs ============
+  $('emptyState').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-empty-action]');
+    if (!b) return;
+    if (b.dataset.emptyAction === 'upload') $('filePicker').click();
+    else if (b.dataset.emptyAction === 'mkdir') $('newFolderBtn').click();
+  });
+
+  // ============ Empty state as drop target ============
+  ['dragenter','dragover'].forEach(function (ev) {
+    $('emptyState').addEventListener(ev, function (e) { e.preventDefault(); });
+  });
+  ['dragleave','drop'].forEach(function (ev) {
+    $('emptyState').addEventListener(ev, function (e) { e.preventDefault(); });
+  });
+  $('emptyState').addEventListener('drop', function (e) {
+    e.preventDefault();
+    if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files, cwd);
+  });
+
+  // ============ Drag overlay (window-level) ============
+  window.addEventListener('dragenter', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    dragDepth++;
+    $('dragOverlay').classList.remove('hidden');
+  });
+  window.addEventListener('dragover', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  window.addEventListener('dragleave', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.types || !e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    dragDepth--;
+    if (dragDepth <= 0) {
+      dragDepth = 0;
+      $('dragOverlay').classList.add('hidden');
+    }
+  });
+  window.addEventListener('drop', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    dragDepth = 0;
+    $('dragOverlay').classList.add('hidden');
+    uploadFiles(e.dataTransfer.files, cwd);
+  });
+
+  // ============ Search ============
+  var searchTimer = null;
+  $('search').addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      search = $('search').value.trim();
+      loadFiles();
+    }, 200);
+  });
+
+  // ============ Sort headers ============
+  ['hName','hSize','hDate'].forEach(function (id) {
+    $(id).addEventListener('click', function () {
+      var s = $(id).dataset.sort;
+      if (sort === s) order = order === 'asc' ? 'desc' : 'asc';
+      else { sort = s; order = 'asc'; }
+      loadFiles();
+    });
+  });
+
+  // ============ Command palette ============
+  function buildPaletteItems() {
+    var items = [];
+    lastRows.forEach(function (f) {
+      var kind = fileKind(f.name, f.is_dir);
+      items.push({
+        type: 'file',
+        id: f.id,
+        label: f.name,
+        is_dir: f.is_dir,
+        kind: kind,
+        hue: kindHue(kind),
+        emoji: kindEmoji(kind),
+        meta: f.is_dir ? 'Folder' : fmtSize(f.size)
+      });
+    });
+    var actions = [
+      { type: 'action', action: 'upload', label: 'Upload file', emoji: '↑' },
+      { type: 'action', action: 'newFolder', label: 'New folder', emoji: '📁' },
+      { type: 'action', action: 'toggleTheme', label: 'Toggle theme', emoji: '◐' },
+      { type: 'action', action: 'goHome', label: 'Go to Home', emoji: '⌂' },
+      { type: 'action', action: 'listView', label: 'Switch to list view', emoji: '☰' },
+      { type: 'action', action: 'gridView', label: 'Switch to grid view', emoji: '▦' },
+      { type: 'action', action: 'changePassword', label: 'Change password', emoji: '🔒' },
+      { type: 'action', action: 'signOut', label: 'Sign out', emoji: '⏻' }
+    ];
+    if (me && me.role === 'admin') {
+      actions.splice(2, 0, { type: 'action', action: 'openAdmin', label: 'Open admin', emoji: '⚙' });
+    }
+    return items.concat(actions);
+  }
+
+  function openPalette() {
+    paletteState.items = buildPaletteItems();
+    paletteState.selected = 0;
+    paletteState.query = '';
+    $('paletteInput').value = '';
+    renderPaletteItems();
+    $('paletteBg').classList.remove('hidden');
+    prevFocus = document.activeElement;
+    setTimeout(function () { $('paletteInput').focus(); }, 0);
+  }
+  function closePalette() {
+    $('paletteBg').classList.add('hidden');
+    if (prevFocus && prevFocus.focus) prevFocus.focus();
+  }
+  function renderPaletteItems() {
+    var q = paletteState.query.toLowerCase();
+    var filtered = paletteState.items.filter(function (it) {
+      return !q || it.label.toLowerCase().indexOf(q) !== -1;
+    });
+    paletteState.filtered = filtered;
+    if (paletteState.selected >= filtered.length) paletteState.selected = 0;
+    if (paletteState.selected < 0) paletteState.selected = filtered.length - 1;
+    var list = $('paletteList');
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      list.innerHTML = '<li class="palette-empty">No matches</li>';
+      return;
+    }
+    filtered.forEach(function (it, idx) {
+      var li = document.createElement('li');
+      li.className = 'palette-item' + (idx === paletteState.selected ? ' selected' : '');
+      li.setAttribute('role', 'option');
+      li.dataset.idx = idx;
+      if (it.type === 'file') {
+        li.innerHTML = '<span class="pi-icon" style="--hue:' + it.hue + '">' + it.emoji + '</span>' +
+                       '<span class="pi-label">' + esc(it.label) + '</span>' +
+                       '<span class="pi-meta">' + esc(it.meta) + '</span>';
+      } else {
+        li.innerHTML = '<span class="pi-icon">' + it.emoji + '</span>' +
+                       '<span class="pi-label">' + esc(it.label) + '</span>';
+      }
+      li.addEventListener('click', function () { paletteState.selected = idx; activatePaletteItem(); });
+      li.addEventListener('mouseenter', function () { paletteState.selected = idx; renderPaletteItems(); });
+      list.appendChild(li);
+    });
+    // Scroll selected into view
+    var sel = list.querySelector('.selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+  function activatePaletteItem() {
+    var item = paletteState.filtered[paletteState.selected];
+    if (!item) return;
+    closePalette();
+    if (item.type === 'file') {
+      if (item.is_dir) {
+        crumbStack.push({ id: item.id, name: item.label });
+        cwd = item.id;
+        renderCrumbs();
+        loadFiles();
+      } else {
+        window.location.href = '/api/files/' + item.id + '/download';
+      }
+    } else {
+      switch (item.action) {
+        case 'upload': $('filePicker').click(); break;
+        case 'newFolder': $('newFolderBtn').click(); break;
+        case 'toggleTheme': $('themeBtn').click(); break;
+        case 'goHome': goHome(); break;
+        case 'listView': setView('list'); break;
+        case 'gridView': setView('grid'); break;
+        case 'changePassword': $('profileBtn').click(); break;
+        case 'signOut': $('logoutBtn').click(); break;
+        case 'openAdmin': $('adminBtn').click(); break;
+      }
+    }
+  }
+  $('paletteBtn').addEventListener('click', openPalette);
+  $('paletteBg').addEventListener('click', function (e) {
+    if (e.target === $('paletteBg')) closePalette();
+  });
+  $('paletteInput').addEventListener('input', function () {
+    paletteState.query = $('paletteInput').value;
+    paletteState.selected = 0;
+    renderPaletteItems();
+  });
+  $('paletteInput').addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (paletteState.filtered.length === 0) return;
+      paletteState.selected = (paletteState.selected + 1) % paletteState.filtered.length;
+      renderPaletteItems();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (paletteState.filtered.length === 0) return;
+      paletteState.selected = (paletteState.selected - 1 + paletteState.filtered.length) % paletteState.filtered.length;
+      renderPaletteItems();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      activatePaletteItem();
+    } else if (e.key === 'Escape') {
+      closePalette();
+    }
+  });
+
+  // ============ Keyboard shortcuts ============
+  function openShortcuts() {
+    openModal(
+      '<h3>Keyboard shortcuts</h3>' +
+      '<p class="sub">Faster than pointing and clicking.</p>' +
+      '<div class="shortcut-list">' +
+        shortcutRow('Focus search', '<span class="kbd">/</span>') +
+        shortcutRow('Upload file', '<span class="kbd">U</span>') +
+        shortcutRow('New folder', '<span class="kbd">N</span>') +
+        shortcutRow('Go to Home', '<span class="kbd">G</span> <span class="kbd">H</span>') +
+        shortcutRow('Command palette', '<span class="kbd">Ctrl</span> <span class="kbd">K</span>') +
+        shortcutRow('Toggle theme', '<span class="kbd">Ctrl</span> <span class="kbd">J</span>') +
+        shortcutRow('List view', '<span class="kbd">L</span>') +
+        shortcutRow('Grid view', '<span class="kbd">V</span>') +
+        shortcutRow('Close modal / palette', '<span class="kbd">Esc</span>') +
+        shortcutRow('Show this sheet', '<span class="kbd">?</span>') +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn primary" id="mClose">Got it</button>' +
+      '</div>',
+      function (m) {
+        m.querySelector('#mClose').addEventListener('click', closeModal);
+      }
+    );
+  }
+  function shortcutRow(desc, keys) {
+    return '<div class="shortcut-row"><span class="desc">' + desc + '</span><span class="keys">' + keys + '</span></div>';
+  }
+  $('shortcutsBtn').addEventListener('click', openShortcuts);
+
+  document.addEventListener('keydown', function (e) {
+    // Cmd/Ctrl+K - palette
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (!$('paletteBg').classList.contains('hidden')) closePalette();
+      else openPalette();
+      return;
+    }
+    // Cmd/Ctrl+J - theme
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'j' || e.key === 'J')) {
+      e.preventDefault();
+      var cur = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(cur);
+      return;
+    }
+    // Escape - close palette, modal, or blur
+    if (e.key === 'Escape') {
+      if (!$('paletteBg').classList.contains('hidden')) { closePalette(); return; }
+      if ($('modalHost').firstElementChild) { closeModal(); return; }
+      if (isTyping()) { document.activeElement.blur(); return; }
+    }
+    // Skip remaining if typing
+    if (isTyping()) return;
+
+    if (e.key === '/') {
+      e.preventDefault();
+      $('search').focus();
+      $('search').select();
+      return;
+    }
+    if (e.key === 'u' || e.key === 'U') {
+      e.preventDefault();
+      $('filePicker').click();
+      return;
+    }
+    if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      $('newFolderBtn').click();
+      return;
+    }
+    if (e.key === 'l' || e.key === 'L') {
+      e.preventDefault();
+      setView('list');
+      return;
+    }
+    if (e.key === 'v' || e.key === 'V') {
+      e.preventDefault();
+      setView('grid');
+      return;
+    }
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+      e.preventDefault();
+      openShortcuts();
+      return;
+    }
+    // g then h - go home
+    if (e.key === 'g' || e.key === 'G') {
+      if (gChord) return;
+      gChord = true;
+      clearTimeout(gChordTimer);
+      gChordTimer = setTimeout(function () { gChord = false; }, 800);
+      return;
+    }
+    if (gChord) {
+      gChord = false;
+      clearTimeout(gChordTimer);
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        goHome();
+        return;
+      }
+    }
+  });
+
+  // ============ Auth ============
+  function showAuth(needsSetup) {
+    $('appView').classList.add('hidden');
+    $('authView').classList.remove('hidden');
+    $('authTitle').textContent = needsSetup ? 'Create administrator' : 'Welcome back';
+    $('authSub').textContent = needsSetup
+      ? 'First run \u2014 create the HomeLite administrator account.'
+      : 'Sign in to access your private cloud.';
+    $('authBtn').textContent = needsSetup ? 'Create account' : 'Sign in';
+    $('authView').dataset.setup = needsSetup ? '1' : '0';
+    setTimeout(function () { $('authUser').focus(); }, 50);
+  }
+
+  $('authBtn').addEventListener('click', function () {
+    var setup = $('authView').dataset.setup === '1';
+    $('authErr').textContent = '';
+    var body = { username: $('authUser').value, password: $('authPass').value };
+    var p = setup ? api('/api/setup', { method: 'POST', body: body }) : Promise.resolve();
+    p.then(function () {
+      if (setup) toast('Administrator created. Signing in…');
+      return api('/api/login', { method: 'POST', body: body });
+    }).then(function (r) {
+      csrf = r.csrf;
+      return boot();
+    }).catch(function (e) {
+      $('authErr').textContent = e.message;
+    });
+  });
+  $('authPass').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('authBtn').click();
+  });
+  $('authUser').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('authPass').focus();
+  });
+
+  $('logoutBtn').addEventListener('click', function () {
+    api('/api/logout', { method: 'POST' }).catch(function () {}).then(function () {
+      csrf = null; me = null; cwd = null; crumbStack = []; selected.clear();
+      prevStats = { used: 0, files: 0, served: 0, uptime: 0 };
+      showAuth(false);
+    });
+  });
+
+  // ============ Admin modal ============
+  function openAdmin() {
+    openModal(
+      '<h3>Users</h3><p class="sub">Manage accounts on this HomeLite server.</p>' +
+      '<div id="usersList" style="margin-bottom:14px">Loading…</div>' +
+      '<h3 style="margin-top:18px">Create user</h3>' +
+      '<div class="field"><label>Username</label><input id="nu" autocapitalize="off"></div>' +
+      '<div class="field"><label>Password</label><input id="np" type="password"></div>' +
+      '<div class="field"><label>Role</label>' +
+        '<select id="nr"><option value="user">user</option><option value="admin">admin</option></select></div>' +
+      '<div class="field"><label>Quota bytes (0 = default)</label><input id="nq" type="number" value="0"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn" id="mClose">Close</button>' +
+        '<button class="btn primary" id="mCreate">Create</button>' +
+      '</div>',
+      function (m) {
+        m.querySelector('#mClose').addEventListener('click', closeModal);
+        m.querySelector('#mCreate').addEventListener('click', function () {
+          api('/api/admin/users', { method: 'POST', body: {
+            username: m.querySelector('#nu').value,
+            password: m.querySelector('#np').value,
+            role: m.querySelector('#nr').value,
+            quota_bytes: parseInt(m.querySelector('#nq').value || '0', 10),
+          } }).then(function () {
+            toast('User created');
+            loadUsers(m);
+          }).catch(function (e) { toast(e.message, 'err'); });
+        });
+        loadUsers(m);
+      }
+    );
+  }
+  function loadUsers(m) {
+    api('/api/admin/users').then(function (r) {
+      var el = m.querySelector('#usersList');
+      el.innerHTML = '';
+      r.users.forEach(function (u) {
+        var row = document.createElement('div');
+        row.className = 'user-row';
+        row.innerHTML =
+          '<div class="info">' +
+            '<div class="uname">' + esc(u.username) + ' <span class="pill ' + u.role + '">' + u.role + '</span>' +
+            (u.disabled ? ' <span class="pill disabled">disabled</span>' : '') + '</div>' +
+            '<div class="meta">' + fmtSize(u.used_bytes) + ' / ' + (u.quota_bytes > 0 ? fmtSize(u.quota_bytes) : '∞') + '</div>' +
+          '</div>';
+        var dis = document.createElement('button');
+        dis.className = 'btn'; dis.textContent = u.disabled ? 'Enable' : 'Disable';
+        dis.style.padding = '6px 10px';
+        dis.addEventListener('click', function () {
+          api('/api/admin/users/' + u.id, { method: 'PATCH', body: { disabled: !u.disabled } })
+            .then(function () { loadUsers(m); toast(u.disabled ? 'User enabled' : 'User disabled'); })
+            .catch(function (e) { toast(e.message, 'err'); });
+        });
+        var rst = document.createElement('button');
+        rst.className = 'btn'; rst.textContent = 'Reset pw';
+        rst.style.padding = '6px 10px';
+        rst.addEventListener('click', function () {
+          promptModal({
+            title: 'Reset password',
+            message: 'Set a new password for ' + u.username + '.',
+            label: 'New password',
+            type: 'text',
+            confirmText: 'Reset'
+          }).then(function (np) {
+            if (np === null) return;
+            if (!np) { toast('Password cannot be empty', 'err'); return; }
+            api('/api/admin/users/' + u.id, { method: 'PATCH', body: { new_password: np } })
+              .then(function () { toast('Password reset'); })
+              .catch(function (e) { toast(e.message, 'err'); });
+          });
+        });
+        var del = document.createElement('button');
+        del.className = 'btn danger'; del.textContent = 'Delete';
+        del.style.padding = '6px 10px';
+        del.addEventListener('click', function () {
+          confirmModal({
+            title: 'Delete user ' + u.username + '?',
+            message: 'This will remove the user and all their files permanently.',
+            confirmText: 'Delete',
+            danger: true
+          }).then(function (ok) {
+            if (!ok) return;
+            api('/api/admin/users/' + u.id, { method: 'DELETE' })
+              .then(function () { loadUsers(m); toast('Deleted'); })
+              .catch(function (e) { toast(e.message, 'err'); });
+          });
+        });
+        row.appendChild(dis); row.appendChild(rst); row.appendChild(del);
+        el.appendChild(row);
+      });
+    }).catch(function (e) { m.querySelector('#usersList').textContent = e.message; });
+  }
+  $('adminBtn').addEventListener('click', openAdmin);
+
+  // ============ Profile modal ============
+  $('profileBtn').addEventListener('click', function () {
+    openModal(
+      '<h3>Your profile</h3>' +
+      '<p class="sub">Signed in as <b>' + esc(me.username) + '</b> · role: ' + me.role + '</p>' +
+      '<h3 style="margin-top:16px">Change password</h3>' +
+      '<div class="field"><label>Current password</label><input id="op" type="password"></div>' +
+      '<div class="field"><label>New password</label><input id="npw" type="password"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn" id="mCancel">Close</button>' +
+        '<button class="btn primary" id="mOk">Update password</button>' +
+      '</div>',
+      function (m) {
+        m.querySelector('#mCancel').addEventListener('click', closeModal);
+        m.querySelector('#mOk').addEventListener('click', function () {
+          api('/api/me/password', { method: 'POST', body: {
+            old_password: m.querySelector('#op').value,
+            new_password: m.querySelector('#npw').value,
+          } }).then(function () {
+            toast('Password changed — please sign in again.');
+            setTimeout(function () { location.reload(); }, 900);
+          }).catch(function (e) { toast(e.message, 'err'); });
+        });
+      }
+    );
+  });
+
+  // ============ Boot ============
+  function boot() {
+    return api('/api/me').then(function (r) {
+      me = r.user; csrf = r.csrf;
+      $('authView').classList.add('hidden');
+      $('appView').classList.remove('hidden');
+      $('avatar').textContent = me.username.charAt(0).toUpperCase();
+      $('avatar').style.background = avatarGradient(me.username);
+      $('adminBtn').style.display = me.role === 'admin' ? '' : 'none';
+      $('heroGreeting').textContent = 'Welcome home, ' + me.username + '.';
+      cwd = null; crumbStack = []; selected.clear(); updateBatchBar();
+      setView(viewMode);
+      setFilter(activeFilter);
+      renderCrumbs();
+      return Promise.all([refreshStatus(), refreshMe(), loadFiles()]);
+    }).then(function () {
+      setInterval(refreshStatus, 15000);
+      setInterval(refreshMe, 30000);
+    }).catch(function () {
+      return api('/api/status').then(function (st) {
+        showAuth(st.needs_setup);
+      });
+    });
+  }
+
+  // ============ Init ============
+  applyTheme(localStorage.getItem('hl_theme') || 'system');
+
+  // ============ Startup chime ============
+  (function () {
+    var audio = new Audio('/startup.mp3');
+    audio.volume = 0.45;
+    var played = false;
+    function attempt() {
+      if (played) return;
+      audio.play().then(function () {
+        played = true;
+        document.removeEventListener('click', attempt);
+        document.removeEventListener('keydown', attempt);
+        document.removeEventListener('touchstart', attempt);
+      }).catch(function () {});
+    }
+    attempt();
+    document.addEventListener('click', attempt);
+    document.addEventListener('keydown', attempt);
+    document.addEventListener('touchstart', attempt);
+  })();
+
+  boot();
+})();
+</script>
+</body>
+</html>
